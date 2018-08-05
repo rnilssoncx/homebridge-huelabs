@@ -106,7 +106,7 @@ class HueResource {
     var post_req = http.request(post_options, function (res) {
       res.setEncoding('utf8');
       res.on('data', function (chunk) {
-        that.log('Response: ' + chunk);
+        that.log(`${that.name}: Response - ${chunk}`);
       });
     });
 
