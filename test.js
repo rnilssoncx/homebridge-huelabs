@@ -1,37 +1,71 @@
-const http = require('http');
+const net = require('net');
 
-http.get({ hostname: "10.0.1.5", port: 80, path: `/api/IsBWrxo3PBHXwoVX2KSym32iMDnR9fu7ahtfjt-C/resourcelinks` }, (resp) => {
-    let data = '';
+const connectionDefaults = {
+    host: '10.0.1.4',
+    port: 23,
+    username: "lutron",
+    password: "integration",
+    debug: false,
+}
 
-    // A chunk of data has been recieved.
-    resp.on('data', (chunk) => {
-    data += chunk;
-    });
+var loggedIn = false;
+var socket = new net.Socket();
 
-    // The whole response has been received.
-    resp.on('end', () => {
-    _accessories(data);
-    });
-}).on("error", (error) => {
-    console.log('Failed to get update from server');
+socket.on('connect', () => {
+    console.log('Connected');
+});
+socket.on('data', (data) => {
+    receiveData(data);
+});
+socket.on('end', () => {
+    // TODO
 });
 
+socket.on('error', (error) => {
+    console.log(error);
+});
 
+socket.destroy();
 
- function _accessories(data) {
-     resourcelinks = JSON.parse(data);
-    for (let key of Object.keys(resourcelinks)) {
-        resource = resourcelinks[key];
-       if (resource.type == "Link" && resource.classid == 2) {
-           for (let link of resource.links) {
-               if (link.startsWith('/sensor')) {
-                sensor = link.split('/')[2];
-                console.log(`${key}: "${resource.name}" - ${sensor}`)
-                   break;
-               }
-           }
-       }
-       
+manageSocket();
+timer = setInterval(manageSocket, 60000);
+
+function receiveData(data) {
+    // TODO: do we need to worry about partial strings?
+    const lines = data.toString().split("\r\n").filter(l => l != "");
+
+    for (let line of lines) {
+        if (connectionDefaults.debug) {
+            console.log("Bridge connection processing line", line);
+        }
+        if (loggedIn) {
+            const args = line.split(",");
+            if (args[0][0] === "~") {
+                console.log(line);
+            }
+        } else {
+            if (/^login:\s*/.test(line)) {
+                socket.write(`${connectionDefaults.username}\r\n`);
+            } else if (/^password:\s*/.test(line)) {
+                socket.write(`${connectionDefaults.password}\r\n`);
+            } else if (/^GNET>\s*/.test(line)) {
+                loggedIn = true;;
+                console.log('Logged in');
+            } else {
+
+            }
+        }
     }
+}
 
-  }
+function manageSocket() {
+    if (socket.destroyed) {
+        loggedIn = false;
+        console.log('Attempting connection');
+        socket.connect(connectionDefaults.port, connectionDefaults.host);
+    } else if (!socket.connecting) {
+        socket.write('\r\n');
+    } else {
+        console.log('Waiting for connection');
+    }
+}

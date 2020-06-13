@@ -1,7 +1,7 @@
 {
   "name": "homebridge-huelabs",
   "version": "0.0.1",
-  "description": "A HomeBridge plugin to expose HueLabs routines",
+  "description": "A HomeBridge plugin to expose HueLabs formulas",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,7 +20,7 @@
   "author": "Robert Nilsson",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rnilssoncx/homebridge-onewire/issues"
+    "url": "https://github.com/rnilssoncx/homebridge-huelabs/issues"
   },
   "dependencies": {
   }
